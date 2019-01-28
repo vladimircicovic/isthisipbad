@@ -13,13 +13,13 @@
 import os
 import sys
 import urllib
-import urllib2
+import string
 import argparse
 import re
 import socket
 # Requires dnspython AKA python-dns package
 import dns.resolver
-from urllib2 import urlopen
+from urllib.request import urlopen
 
 
 def color(text, color_code):
@@ -54,23 +54,21 @@ def content_test(url, badip):
         Returns:
             Boolean
     """
-
     try:
-        request = urllib2.Request(url)
-        opened_request = urllib2.build_opener().open(request)
-	html_content = opened_request.read()
-	retcode = opened_request.code
+        request = urlopen(url)
+        html_content = request.read().decode('utf-8')
+        retcode = request.getcode()  
 
-	matches = retcode == 200
+        matches = retcode == 200
         matches = matches and re.findall(badip, html_content)
 
         return len(matches) == 0
-    except Exception, e:
-        print "Error! %s" % e
+    except Exception as e:
+        print("Error! %s" % e)
         return False
 
 bls = ["b.barracudacentral.org", "bl.spamcannibal.org", "bl.spamcop.net",
-       "blacklist.woody.ch", "cbl.abuseat.org", "cdl.anti-spam.org.cn",
+       "blacklist.woody.ch", "cbl.abuseat.org", #"cdl.anti-spam.org.cn",
        "combined.abuse.ch", "combined.rbl.msrbl.net", "db.wpbl.info",
        "dnsbl-1.uceprotect.net", "dnsbl-2.uceprotect.net",
        "dnsbl-3.uceprotect.net", "dnsbl.cyberlogic.net",
@@ -91,7 +89,7 @@ bls = ["b.barracudacentral.org", "bl.spamcannibal.org", "bl.spamcop.net",
        "spam.rbl.msrbl.net", "spam.spamrats.com", "spamrbl.imp.ch",
        "t3direct.dnsbl.net.au", "tor.dnsbl.sectoor.de",
        "torserver.tor.dnsbl.sectoor.de", "ubl.lashback.com",
-       "ubl.unsubscore.com", "virus.rbl.jp", "virus.rbl.msrbl.net",
+       "ubl.unsubscore.com", "virus.rbl.msrbl.net", #"virus.rbl.jp",
        "web.dnsbl.sorbs.net", "wormrbl.imp.ch", "xbl.spamhaus.org",
        "zen.spamhaus.org", "zombie.dnsbl.sorbs.net"]
 
@@ -121,16 +119,16 @@ URLS = [
      True),
 
     #Dragon Research Group - SSH
-    ('http://dragonresearchgroup.org/insight/sshpwauth.txt',
-     'is not listed on Dragon Research Group - SSH',
-     'is listed on Dragon Research Group - SSH',
-     True),
+    #('http://dragonresearchgroup.org/insight/sshpwauth.txt',
+    # 'is not listed on Dragon Research Group - SSH',
+    # 'is listed on Dragon Research Group - SSH',
+    # True),
 
     #Dragon Research Group - VNC
-    ('http://dragonresearchgroup.org/insight/vncprobe.txt',
-     'is not listed on Dragon Research Group - VNC',
-     'is listed on Dragon Research Group - VNC',
-     True),
+    #('http://dragonresearchgroup.org/insight/vncprobe.txt',
+    # 'is not listed on Dragon Research Group - VNC',
+    # 'is listed on Dragon Research Group - VNC',
+    # True),
 
     #NoThinkMalware
     ('http://www.nothink.org/blacklist/blacklist_malware_http.txt',
@@ -163,10 +161,10 @@ URLS = [
      True),
 
     #malc0de
-    ('http://malc0de.com/bl/IP_Blacklist.txt',
-     'is not listed on malc0de',
-     'is listed on malc0de',
-     True),
+    #('http://malc0de.com/bl/IP_Blacklist.txt',
+    # 'is not listed on malc0de',
+    # 'is listed on malc0de',
+    # True),
 
     #MalWareBytes
     ('http://hosts-file.net/rss.asp',
@@ -212,7 +210,7 @@ if __name__ == "__main__":
 
     #IP INFO
     reversed_dns = socket.getfqdn(badip)
-    geoip = urllib.urlopen('http://api.hackertarget.com/geoip/?q='
+    geoip = urlopen('http://api.hackertarget.com/geoip/?q='
                            + badip).read().rstrip()
 
     print(blue('\nThe FQDN for {0} is {1}\n'.format(badip, reversed_dns)))
@@ -225,7 +223,7 @@ if __name__ == "__main__":
 
     for url, succ, fail, mal in URLS:
         if content_test(url, badip):
-	    if args.success:
+            if args.success:
                 print(green('{0} {1}'.format(badip, succ)))
             GOOD = GOOD + 1
         else:
